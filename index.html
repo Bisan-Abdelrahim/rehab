@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Rehabilitation System</title>
+  <style>
+    :root {
+      --bg: #f3f7fb;
+      --surface: #ffffff;
+      --surface-soft: #eef4fa;
+      --text: #17324d;
+      --muted: #61758a;
+      --line: #d7e2ec;
+      --primary: #176b87;
+      --primary-soft: #d8eff4;
+      --accent: #2f9e7a;
+      --warning: #d97706;
+      --danger: #c03a3a;
+      --shadow: 0 16px 40px rgba(20, 45, 69, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(23, 107, 135, 0.12), transparent 34%),
+        radial-gradient(circle at top right, rgba(47, 158, 122, 0.10), transparent 28%),
+        linear-gradient(180deg, #f8fbfd 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .app-shell {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      margin-bottom: 22px;
+      padding: 8px 2px 0;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(2rem, 2.8vw, 3rem);
+      letter-spacing: -0.03em;
+    }
+
+    .title-block p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: var(--shadow);
+      color: var(--muted);
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(47, 158, 122, 0.14);
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .status-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .main-grid {
+      grid-template-columns: 1.1fr 1.4fr 1fr;
+      align-items: start;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(215, 226, 236, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      padding: 18px 18px 0;
+    }
+
+    .card-header h2,
+    .card-header h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+
+    .card-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .status-list,
+    .history-list {
+      list-style: none;
+      margin: 0;
+      padding: 18px;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .status-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .status-led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px rgba(47, 158, 122, 0.12);
+      flex: 0 0 auto;
+    }
+
+    .status-value {
+      color: var(--muted);
+      text-align: right;
+      font-size: 0.94rem;
+    }
+
+    .controls {
+      padding: 18px;
+    }
+
+    .control-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .control-option {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff 0%, #f7fbfe 100%);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .control-option:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(20, 45, 69, 0.07);
+    }
+
+    .control-option.active {
+      border-color: rgba(23, 107, 135, 0.45);
+      background: linear-gradient(180deg, rgba(23, 107, 135, 0.10) 0%, rgba(216, 239, 244, 0.75) 100%);
+      box-shadow: 0 12px 26px rgba(23, 107, 135, 0.12);
+    }
+
+    .control-option span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-bottom: 8px;
+    }
+
+    .control-option strong {
+      display: block;
+      font-size: 1.02rem;
+      color: var(--text);
+    }
+
+    .visual-panel {
+      padding: 18px;
+      min-height: 100%;
+    }
+
+    .visual-stage {
+      margin-top: 16px;
+      min-height: 360px;
+      border: 1px dashed rgba(23, 107, 135, 0.28);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(238,244,250,0.92) 100%),
+        repeating-linear-gradient(90deg, rgba(23, 107, 135, 0.04) 0, rgba(23, 107, 135, 0.04) 1px, transparent 1px, transparent 24px),
+        repeating-linear-gradient(0deg, rgba(23, 107, 135, 0.04) 0, rgba(23, 107, 135, 0.04) 1px, transparent 1px, transparent 24px);
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .hand-visual {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+      width: 100%;
+    }
+
+    .hand-svg {
+      width: min(100%, 480px);
+      height: auto;
+      display: block;
+    }
+
+    /* Pivot fix: rotate each phalanx around the joint at the top-center of
+       its own bounding box, since every segment path is drawn starting at
+       local (0,0) and growing upward. This is what actually lets the tip
+       of one bone stay anchored to the base of the next when it flexes. */
+    .hand-svg .segment-rotor {
+      transform-box: fill-box;
+      transform-origin: 50% 100%;
+      transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .hand-svg .palm {
+      fill: url(#palm-gradient);
+      stroke: #6c8ea2;
+      stroke-width: 3.5;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .hand-svg .wrist-block {
+      fill: url(#wrist-gradient);
+    }
+
+    .hand-svg .segment {
+      fill: url(#segment-gradient);
+      stroke: #6c8ea2;
+      stroke-width: 2.4;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .hand-svg .segment-tip {
+      fill: url(#segment-tip-gradient);
+    }
+
+    .hand-svg .crease {
+      fill: none;
+      stroke: rgba(108, 142, 162, 0.55);
+      stroke-width: 1.4;
+      stroke-linecap: round;
+    }
+
+    .hand-svg .nail {
+      fill: rgba(255, 255, 255, 0.72);
+      stroke: rgba(108, 142, 162, 0.55);
+      stroke-width: 1;
+    }
+
+    .hand-svg .knuckle {
+      fill: rgba(126, 168, 189, 0.55);
+      stroke: #ffffff;
+      stroke-width: 1.2;
+    }
+
+    .hand-svg .wrist-line {
+      stroke: rgba(108, 142, 162, 0.72);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .hand-controls {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+
+    .hand-controls button {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .hand-controls button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(20, 45, 69, 0.07);
+    }
+
+    .hand-controls button.active {
+      border-color: rgba(23, 107, 135, 0.55);
+      background: rgba(23, 107, 135, 0.10);
+    }
+
+    .finger-panel {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .finger-panel h4 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .finger-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .finger-select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      padding: 9px 10px;
+      font-size: 0.9rem;
+    }
+
+    .finger-buttons,
+    .sequential-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .sequential-buttons {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .finger-buttons button,
+    .sequential-buttons button,
+    .reset-fingers {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .finger-buttons button:hover,
+    .sequential-buttons button:hover,
+    .reset-fingers:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(20, 45, 69, 0.08);
+    }
+
+    .command-panel {
+      padding: 18px;
+    }
+
+    .command-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .command-item {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface-soft);
+    }
+
+    .command-item label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .command-item strong {
+      font-size: 1rem;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .stop-button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #df5959 0%, var(--danger) 100%);
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(192, 58, 58, 0.18);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .stop-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(192, 58, 58, 0.22);
+    }
+
+    .history-list li {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .history-list li:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .history-list strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    @media (max-width: 1080px) {
+      .main-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .visual-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 16px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .status-grid,
+      .main-grid,
+      .control-options {
+        grid-template-columns: 1fr;
+      }
+
+      .status-item {
+        flex-direction: column;
+      }
+
+      .status-value {
+        text-align: left;
+      }
+
+      .hand-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .finger-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>Hand Rehabilitation System</h1>
+        <p>Real-Time Exercise Monitoring and Control</p>
+      </div>
+      <div class="badge" aria-label="Overall connection status">
+        <span class="badge-dot"></span>
+        Ready for device connection
+      </div>
+    </header>
+
+    <section class="grid status-grid" aria-label="Connection status">
+      <article class="card">
+        <div class="card-header">
+          <h2>Raspberry Pi</h2>
+          <p>Central coordination unit</p>
+        </div>
+        <ul class="status-list">
+          <li class="status-item">
+            <div class="status-label"><span class="status-led"></span>Status</div>
+            <div class="status-value">Connected</div>
+          </li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <h2>ESP32</h2>
+          <p>Embedded control interface</p>
+        </div>
+        <ul class="status-list">
+          <li class="status-item">
+            <div class="status-label"><span class="status-led"></span>Status</div>
+            <div class="status-value">Connected</div>
+          </li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <h2>Rehabilitation Device</h2>
+          <p>Wearable exoskeleton unit</p>
+        </div>
+        <ul class="status-list">
+          <li class="status-item">
+            <div class="status-label"><span class="status-led"></span>Status</div>
+            <div class="status-value">Standby</div>
+          </li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="grid main-grid" aria-label="Main control area">
+      <article class="card controls">
+        <div class="card-header">
+          <h3>Control Method</h3>
+          <p>Select the active input mode for rehabilitation control.</p>
+        </div>
+        <div class="control-options" role="tablist" aria-label="Control method options">
+          <button class="control-option active" type="button" data-mode="Voice Control" aria-pressed="true">
+            <span>Primary input</span>
+            <strong>Voice Control</strong>
+          </button>
+          <button class="control-option" type="button" data-mode="EMG Control" aria-pressed="false">
+            <span>Muscle signal input</span>
+            <strong>EMG Control</strong>
+          </button>
+        </div>
+      </article>
+
+      <article class="card visual-panel">
+        <div class="card-header">
+          <h3>Exercise Visualization</h3>
+          <p>Inline SVG hand model with independently controllable finger segments.</p>
+        </div>
+        <div class="visual-stage hand-visual" aria-label="Exercise visualization area">
+          <svg class="hand-svg" viewBox="0 0 640 620" role="img" aria-labelledby="hand-title hand-desc">
+            <title id="hand-title">Rehabilitation hand model</title>
+            <desc id="hand-desc">Front-facing anatomical hand model with independently rotatable finger phalanges.</desc>
+            <defs>
+              <linearGradient id="palm-gradient" x1="0%" y1="0%" x2="10%" y2="100%">
+                <stop offset="0%" stop-color="#f5fafc"></stop>
+                <stop offset="100%" stop-color="#d6e3ed"></stop>
+              </linearGradient>
+              <linearGradient id="wrist-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#eef4fa"></stop>
+                <stop offset="100%" stop-color="#d0dfea"></stop>
+              </linearGradient>
+              <linearGradient id="segment-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#dbe8f0"></stop>
+                <stop offset="50%" stop-color="#eef5f9"></stop>
+                <stop offset="100%" stop-color="#d3e2ec"></stop>
+              </linearGradient>
+              <linearGradient id="segment-tip-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#d5e5ee"></stop>
+                <stop offset="50%" stop-color="#eef6fa"></stop>
+                <stop offset="100%" stop-color="#cfe0eb"></stop>
+              </linearGradient>
+              <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#17324d" flood-opacity="0.12"></feDropShadow>
+              </filter>
+            </defs>
+            <g filter="url(#soft-shadow)">
+              <path class="palm" d="M 206.6 290.5 L 222.7 272.5 Q 232.0 262.0 246.0 261.5 L 269.0 260.6 Q 285.0 260.0 300.4 264.4 L 308.5 266.7 Q 320.0 270.0 331.9 271.7 L 341.1 273.0 Q 355.0 275.0 368.4 278.9 L 388.5 284.7 Q 400.0 288.0 410.9 293.1 L 420.9 297.8 Q 430.0 302.0 435.0 310.7 L 444.0 326.2 Q 452.0 340.0 452.0 356.0 L 452.0 360.0 Q 452.0 380.0 443.1 397.9 L 414.8 455.3 Q 405.0 475.0 384.0 481.7 L 335.2 497.2 Q 320.0 502.0 304.0 502.0 L 286.0 502.0 Q 272.0 502.0 258.6 497.9 L 239.4 492.1 Q 226.0 488.0 217.8 476.6 L 203.1 456.1 Q 188.0 435.0 182.5 409.6 L 179.4 395.6 Q 176.0 380.0 177.2 364.0 L 179.2 338.0 Q 180.0 328.0 185.5 319.7 L 194.5 306.3 Q 200.0 298.0 206.6 290.5 Z"></path>
+              <path class="palm" opacity="0.30" d="M 300 296 C 330 286 365 292 388 312"></path>
+              <path class="palm" opacity="0.20" d="M 246 292 C 222 304 205 322 198 346"></path>
+              <path class="palm wrist-block" d="M 272.0 502.0 L 370.0 502.0 Q 384.0 502.0 387.6 515.5 L 396.4 548.5 Q 400.0 562.0 390.7 572.5 L 379.3 585.5 Q 370.0 596.0 356.0 596.0 L 286.0 596.0 Q 272.0 596.0 262.7 585.5 L 251.3 572.5 Q 242.0 562.0 245.6 548.5 L 254.4 515.5 Q 258.0 502.0 272.0 502.0 Z"></path>
+              <path class="wrist-line" d="M 268 536 L 378 536"></path>
+              <path class="wrist-line" opacity="0.5" d="M 262 556 L 384 556"></path>
+
+              <g class="segment-group" id="index-chain" transform="translate(222 266) rotate(-8)">
+                <g class="segment-rotor" id="index-mcp">
+                  <path class="segment" d="M -20.0 0 C -20.0 10.0 20.0 10.0 20.0 0 L 16.0 -72.0 C 16.0 -77.1 -16.0 -77.1 -16.0 -72.0 Z"></path>
+                  <path class="crease" d="M -16.4 0 C -16.4 8.2 16.4 8.2 16.4 0"></path>
+                  <circle class="knuckle" cx="0" cy="-72.0" r="6.6"></circle>
+                  <g transform="translate(0 -72.0)">
+                    <g class="segment-rotor" id="index-pip">
+                      <path class="segment" d="M -15.0 0 C -15.0 7.5 15.0 7.5 15.0 0 L 12.5 -46.0 C 12.5 -50.0 -12.5 -50.0 -12.5 -46.0 Z"></path>
+                      <path class="crease" d="M -12.3 0 C -12.3 6.1 12.3 6.1 12.3 0"></path>
+                      <circle class="knuckle" cx="0" cy="-46.0" r="5.3"></circle>
+                      <g transform="translate(0 -46.0)">
+                        <g class="segment-rotor" id="index-dip">
+                          <path class="segment segment-tip" d="M -12.0 0 C -12.0 6.0 12.0 6.0 12.0 0 L 9.5 -32.0 C 9.5 -38.6 -9.5 -38.6 -9.5 -32.0 Z"></path>
+                          <path class="crease" d="M -9.8 0 C -9.8 4.9 9.8 4.9 9.8 0"></path>
+                          <ellipse class="nail" cx="0" cy="-21.1" rx="5.9" ry="5.4"></ellipse>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+
+              <g class="segment-group" id="middle-chain" transform="translate(285 258) rotate(0)">
+                <g class="segment-rotor" id="middle-mcp">
+                  <path class="segment" d="M -21.0 0 C -21.0 10.5 21.0 10.5 21.0 0 L 16.5 -80.0 C 16.5 -85.3 -16.5 -85.3 -16.5 -80.0 Z"></path>
+                  <path class="crease" d="M -17.2 0 C -17.2 8.6 17.2 8.6 17.2 0"></path>
+                  <circle class="knuckle" cx="0" cy="-80.0" r="6.8"></circle>
+                  <g transform="translate(0 -80.0)">
+                    <g class="segment-rotor" id="middle-pip">
+                      <path class="segment" d="M -15.5 0 C -15.5 7.8 15.5 7.8 15.5 0 L 13.0 -50.0 C 13.0 -54.2 -13.0 -54.2 -13.0 -50.0 Z"></path>
+                      <path class="crease" d="M -12.7 0 C -12.7 6.4 12.7 6.4 12.7 0"></path>
+                      <circle class="knuckle" cx="0" cy="-50.0" r="5.5"></circle>
+                      <g transform="translate(0 -50.0)">
+                        <g class="segment-rotor" id="middle-dip">
+                          <path class="segment segment-tip" d="M -12.5 0 C -12.5 6.2 12.5 6.2 12.5 0 L 10.0 -34.0 C 10.0 -41.0 -10.0 -41.0 -10.0 -34.0 Z"></path>
+                          <path class="crease" d="M -10.2 0 C -10.2 5.1 10.2 5.1 10.2 0"></path>
+                          <ellipse class="nail" cx="0" cy="-22.4" rx="6.2" ry="5.8"></ellipse>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+
+              <g class="segment-group" id="ring-chain" transform="translate(349 272) rotate(7)">
+                <g class="segment-rotor" id="ring-mcp">
+                  <path class="segment" d="M -19.0 0 C -19.0 9.5 19.0 9.5 19.0 0 L 15.0 -74.0 C 15.0 -78.8 -15.0 -78.8 -15.0 -74.0 Z"></path>
+                  <path class="crease" d="M -15.6 0 C -15.6 7.8 15.6 7.8 15.6 0"></path>
+                  <circle class="knuckle" cx="0" cy="-74.0" r="6.2"></circle>
+                  <g transform="translate(0 -74.0)">
+                    <g class="segment-rotor" id="ring-pip">
+                      <path class="segment" d="M -14.0 0 C -14.0 7.0 14.0 7.0 14.0 0 L 11.5 -44.0 C 11.5 -47.7 -11.5 -47.7 -11.5 -44.0 Z"></path>
+                      <path class="crease" d="M -11.5 0 C -11.5 5.7 11.5 5.7 11.5 0"></path>
+                      <circle class="knuckle" cx="0" cy="-44.0" r="4.8"></circle>
+                      <g transform="translate(0 -44.0)">
+                        <g class="segment-rotor" id="ring-dip">
+                          <path class="segment segment-tip" d="M -11.0 0 C -11.0 5.5 11.0 5.5 11.0 0 L 9.0 -30.0 C 9.0 -36.3 -9.0 -36.3 -9.0 -30.0 Z"></path>
+                          <path class="crease" d="M -9.0 0 C -9.0 4.5 9.0 4.5 9.0 0"></path>
+                          <ellipse class="nail" cx="0" cy="-19.8" rx="5.6" ry="5.1"></ellipse>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+
+              <g class="segment-group" id="little-chain" transform="translate(408 296) rotate(15)">
+                <g class="segment-rotor" id="little-mcp">
+                  <path class="segment" d="M -16.0 0 C -16.0 8.0 16.0 8.0 16.0 0 L 12.5 -58.0 C 12.5 -62.4 -12.5 -62.4 -12.5 -58.0 Z"></path>
+                  <path class="crease" d="M -13.1 0 C -13.1 6.6 13.1 6.6 13.1 0"></path>
+                  <circle class="knuckle" cx="0" cy="-58.0" r="4.8"></circle>
+                  <g transform="translate(0 -58.0)">
+                    <g class="segment-rotor" id="little-pip">
+                      <path class="segment" d="M -11.0 0 C -11.0 5.5 11.0 5.5 11.0 0 L 9.0 -34.0 C 9.0 -36.9 -9.0 -36.9 -9.0 -34.0 Z"></path>
+                      <path class="crease" d="M -9.0 0 C -9.0 4.5 9.0 4.5 9.0 0"></path>
+                      <circle class="knuckle" cx="0" cy="-34.0" r="3.7"></circle>
+                      <g transform="translate(0 -34.0)">
+                        <g class="segment-rotor" id="little-dip">
+                          <path class="segment segment-tip" d="M -8.5 0 C -8.5 4.2 8.5 4.2 8.5 0 L 7.0 -24.0 C 7.0 -28.9 -7.0 -28.9 -7.0 -24.0 Z"></path>
+                          <path class="crease" d="M -7.0 0 C -7.0 3.5 7.0 3.5 7.0 0"></path>
+                          <ellipse class="nail" cx="0" cy="-15.8" rx="4.3" ry="4.1"></ellipse>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+
+              <g class="segment-group" id="thumb-chain" transform="translate(192 412) rotate(-55)">
+                <g class="segment-rotor" id="thumb-base">
+                  <path class="segment" d="M -23.0 0 C -23.0 11.5 23.0 11.5 23.0 0 L 18.0 -64.0 C 18.0 -69.8 -18.0 -69.8 -18.0 -64.0 Z"></path>
+                  <path class="crease" d="M -18.9 0 C -18.9 9.4 18.9 9.4 18.9 0"></path>
+                  <circle class="knuckle" cx="0" cy="-64.0" r="7.0"></circle>
+                  <g transform="translate(0 -64.0)">
+                    <g class="segment-rotor" id="thumb-tip">
+                      <path class="segment segment-tip" d="M -16.0 0 C -16.0 8.0 16.0 8.0 16.0 0 L 12.0 -42.0 C 12.0 -50.4 -12.0 -50.4 -12.0 -42.0 Z"></path>
+                      <path class="crease" d="M -13.1 0 C -13.1 6.6 13.1 6.6 13.1 0"></path>
+                      <ellipse class="nail" cx="0" cy="-27.7" rx="7.4" ry="7.1"></ellipse>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </svg>
+
+          <div class="hand-controls" aria-label="Hand position test controls">
+            <button type="button" data-position="open">Open</button>
+            <button type="button" data-position="hook">Hook Flexion</button>
+            <button type="button" data-position="progressive">Progressive Flexion</button>
+            <button type="button" data-position="partial">Partial Fist</button>
+            <button type="button" data-position="release">Release</button>
+          </div>
+
+          <section class="finger-panel" aria-label="Individual Finger Test">
+            <h4>Individual Finger Test</h4>
+            <div class="finger-grid">
+              <select id="finger-select" class="finger-select" aria-label="Select finger">
+                <option value="thumb">Thumb</option>
+                <option value="index" selected>Index</option>
+                <option value="middle">Middle</option>
+                <option value="ring">Ring</option>
+                <option value="little">Little</option>
+              </select>
+
+              <div class="finger-buttons" aria-label="Individual finger positions">
+                <button type="button" data-finger-position="open">Open</button>
+                <button type="button" data-finger-position="hook">Hook</button>
+                <button type="button" data-finger-position="progressive">Progressive</button>
+                <button type="button" data-finger-position="partial">Partial</button>
+              </div>
+
+              <button type="button" id="reset-fingers" class="reset-fingers">Reset All Fingers</button>
+
+              <div class="sequential-buttons" aria-label="Sequential exercise controls">
+                <button type="button" id="seq-index-little">Index to Little</button>
+                <button type="button" id="seq-little-index">Little to Index</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </article>
+
+      <aside class="card command-panel">
+        <div class="card-header">
+          <h3>Current Command</h3>
+          <p>Live monitoring values for the active session.</p>
+        </div>
+
+        <div class="command-list">
+          <div class="command-item">
+            <label>Detected Speech</label>
+            <strong id="detected-speech">Waiting for input</strong>
+          </div>
+          <div class="command-item">
+            <label>Recognized Command</label>
+            <strong id="recognized-command">No command detected</strong>
+          </div>
+          <div class="command-item">
+            <label>Current Hand Position</label>
+            <strong id="hand-position">Neutral position</strong>
+          </div>
+          <div class="command-item">
+            <label>System Status</label>
+            <strong id="system-status">Monitoring active</strong>
+          </div>
+        </div>
+
+        <button class="stop-button" id="emergency-stop" type="button">Emergency Stop</button>
+      </aside>
+    </section>
+
+    <section class="card" style="margin-top: 18px;">
+      <div class="card-header">
+        <h3>Session History</h3>
+        <p>Recent rehabilitation activity records.</p>
+      </div>
+      <ul class="history-list">
+        <li>
+          <strong>Session initialized</strong>
+          System interface loaded and waiting for user interaction.
+        </li>
+        <li>
+          <strong>Control mode selected</strong>
+          Voice Control set as the default active method.
+        </li>
+        <li>
+          <strong>Device connection check</strong>
+          Raspberry Pi and ESP32 status indicators verified.
+        </li>
+      </ul>
+    </section>
+
+    <p class="footer-note">Prototype interface for a hand rehabilitation exoskeleton system.</p>
+  </main>
+
+  <script>
+    const controlOptions = document.querySelectorAll('.control-option');
+    const detectedSpeech = document.getElementById('detected-speech');
+    const recognizedCommand = document.getElementById('recognized-command');
+    const handPosition = document.getElementById('hand-position');
+    const systemStatus = document.getElementById('system-status');
+    const emergencyStop = document.getElementById('emergency-stop');
+    const handButtons = document.querySelectorAll('.hand-controls button');
+    const fingerSelect = document.getElementById('finger-select');
+    const fingerPositionButtons = document.querySelectorAll('[data-finger-position]');
+    const resetFingersButton = document.getElementById('reset-fingers');
+    const seqIndexToLittleButton = document.getElementById('seq-index-little');
+    const seqLittleToIndexButton = document.getElementById('seq-little-index');
+    const segmentElements = {
+      thumbBase: document.getElementById('thumb-base'),
+      thumbTip: document.getElementById('thumb-tip'),
+      indexMcp: document.getElementById('index-mcp'),
+      indexPip: document.getElementById('index-pip'),
+      indexDip: document.getElementById('index-dip'),
+      middleMcp: document.getElementById('middle-mcp'),
+      middlePip: document.getElementById('middle-pip'),
+      middleDip: document.getElementById('middle-dip'),
+      ringMcp: document.getElementById('ring-mcp'),
+      ringPip: document.getElementById('ring-pip'),
+      ringDip: document.getElementById('ring-dip'),
+      littleMcp: document.getElementById('little-mcp'),
+      littlePip: document.getElementById('little-pip'),
+      littleDip: document.getElementById('little-dip')
+    };
+
+    // This explicit map is where future per-servo routing can be attached.
+    const fingerJointMap = {
+      thumb: ['thumbBase', 'thumbTip'],
+      index: ['indexMcp', 'indexPip', 'indexDip'],
+      middle: ['middleMcp', 'middlePip', 'middleDip'],
+      ring: ['ringMcp', 'ringPip', 'ringDip'],
+      little: ['littleMcp', 'littlePip', 'littleDip']
+    };
+
+    const fingerLabelMap = {
+      thumb: 'Thumb',
+      index: 'Index',
+      middle: 'Middle',
+      ring: 'Ring',
+      little: 'Little'
+    };
+
+    const handCalibration = {
+      open: {
+        thumbBase: -4,
+        thumbTip: -2,
+        indexMcp: 0,
+        indexPip: 0,
+        indexDip: 0,
+        middleMcp: 0,
+        middlePip: 0,
+        middleDip: 0,
+        ringMcp: 0,
+        ringPip: 0,
+        ringDip: 0,
+        littleMcp: 0,
+        littlePip: 0,
+        littleDip: 0
+      },
+      hook: {
+        thumbBase: 2,
+        thumbTip: 8,
+        indexMcp: 4,
+        indexPip: 60,
+        indexDip: 55,
+        middleMcp: 4,
+        middlePip: 60,
+        middleDip: 55,
+        ringMcp: 3,
+        ringPip: 55,
+        ringDip: 50,
+        littleMcp: 2,
+        littlePip: 50,
+        littleDip: 46
+      },
+      progressive: {
+        thumbBase: 12,
+        thumbTip: 18,
+        indexMcp: 35,
+        indexPip: 65,
+        indexDip: 55,
+        middleMcp: 32,
+        middlePip: 62,
+        middleDip: 52,
+        ringMcp: 28,
+        ringPip: 58,
+        ringDip: 48,
+        littleMcp: 24,
+        littlePip: 52,
+        littleDip: 44
+      },
+      partial: {
+        thumbBase: 18,
+        thumbTip: 28,
+        indexMcp: 45,
+        indexPip: 75,
+        indexDip: 60,
+        middleMcp: 42,
+        middlePip: 72,
+        middleDip: 58,
+        ringMcp: 38,
+        ringPip: 66,
+        ringDip: 54,
+        littleMcp: 32,
+        littlePip: 58,
+        littleDip: 48
+      },
+      release: {
+        thumbBase: -4,
+        thumbTip: -2,
+        indexMcp: 0,
+        indexPip: 0,
+        indexDip: 0,
+        middleMcp: 0,
+        middlePip: 0,
+        middleDip: 0,
+        ringMcp: 0,
+        ringPip: 0,
+        ringDip: 0,
+        littleMcp: 0,
+        littlePip: 0,
+        littleDip: 0
+      }
+    };
+
+    const handPositionDetails = {
+      open: {
+        label: 'Open',
+        description: 'All finger joints are approximately straight.'
+      },
+      hook: {
+        label: 'Hook Flexion',
+        description: 'PIP and DIP joints bend first while MCP joints remain almost straight.'
+      },
+      progressive: {
+        label: 'Progressive Flexion',
+        description: 'PIP and DIP joints stay bent as MCP joints begin flexing.'
+      },
+      partial: {
+        label: 'Partial Fist',
+        description: 'MCP, PIP, and DIP joints are flexed without closing into a full fist.'
+      },
+      release: {
+        label: 'Release',
+        description: 'All joints return smoothly to the open position.'
+      }
+    };
+
+    function setJointRotation(element, angle) {
+      element.style.transform = `rotate(${angle}deg)`;
+    }
+
+    function setHandPosition(positionName) {
+      const key = handCalibration[positionName] ? positionName : 'open';
+      const jointAngles = handCalibration[key];
+      const details = handPositionDetails[key];
+
+      Object.entries(segmentElements).forEach(([name, element]) => {
+        setJointRotation(element, jointAngles[name] ?? 0);
+      });
+
+      handButtons.forEach((button) => {
+        const isActive = button.dataset.position === key;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+
+      handPosition.textContent = details.label;
+      systemStatus.textContent = details.description;
+      recognizedCommand.textContent = details.label;
+    }
+
+    function setFingerPosition(fingerName, positionName) {
+      const finger = fingerJointMap[fingerName] ? fingerName : 'index';
+      const key = handCalibration[positionName] ? positionName : 'open';
+      const jointAngles = handCalibration[key];
+
+      fingerJointMap[finger].forEach((jointName) => {
+        const element = segmentElements[jointName];
+        if (element) {
+          setJointRotation(element, jointAngles[jointName] ?? 0);
+        }
+      });
+
+      const fingerLabel = fingerLabelMap[finger];
+      handPosition.textContent = `${fingerLabel} ${handPositionDetails[key].label}`;
+      recognizedCommand.textContent = `${fingerLabel} ${handPositionDetails[key].label}`;
+      systemStatus.textContent = `Individual control: ${fingerLabel} set to ${handPositionDetails[key].label.toLowerCase()}.`;
+    }
+
+    function resetAllFingers() {
+      Object.keys(fingerJointMap).forEach((fingerName) => {
+        setFingerPosition(fingerName, 'open');
+      });
+      handPosition.textContent = 'Open';
+      recognizedCommand.textContent = 'Open';
+      systemStatus.textContent = 'All fingers reset to open position.';
+    }
+
+    async function runSequentialFlexion(order) {
+      const validOrder = Array.isArray(order) ? order.filter((finger) => fingerJointMap[finger]) : [];
+      if (validOrder.length === 0) {
+        return;
+      }
+
+      resetAllFingers();
+      const stepDelayMs = 320;
+
+      for (const fingerName of validOrder) {
+        setFingerPosition(fingerName, 'partial');
+        // Controlled short delay to create one-finger-at-a-time motion.
+        await new Promise((resolve) => setTimeout(resolve, stepDelayMs));
+      }
+
+      handPosition.textContent = 'Sequential Flexion';
+      recognizedCommand.textContent = 'Sequential Flexion';
+      systemStatus.textContent = `Sequential flexion complete: ${validOrder.map((finger) => fingerLabelMap[finger]).join(' -> ')}.`;
+    }
+
+    controlOptions.forEach((option) => {
+      option.addEventListener('click', () => {
+        controlOptions.forEach((item) => {
+          item.classList.remove('active');
+          item.setAttribute('aria-pressed', 'false');
+        });
+
+        option.classList.add('active');
+        option.setAttribute('aria-pressed', 'true');
+
+        const selectedMode = option.getAttribute('data-mode');
+        recognizedCommand.textContent = selectedMode;
+        detectedSpeech.textContent = selectedMode === 'Voice Control' ? 'Voice mode selected' : 'EMG mode selected';
+        systemStatus.textContent = 'Monitoring active';
+      });
+    });
+
+    handButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        setHandPosition(button.dataset.position);
+      });
+    });
+
+    fingerPositionButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        setFingerPosition(fingerSelect.value, button.dataset.fingerPosition);
+      });
+    });
+
+    resetFingersButton.addEventListener('click', () => {
+      resetAllFingers();
+    });
+
+    seqIndexToLittleButton.addEventListener('click', async () => {
+      await runSequentialFlexion(['index', 'middle', 'ring', 'little']);
+    });
+
+    seqLittleToIndexButton.addEventListener('click', async () => {
+      await runSequentialFlexion(['little', 'ring', 'middle', 'index']);
+    });
+
+    emergencyStop.addEventListener('click', () => {
+      detectedSpeech.textContent = 'Emergency stop requested';
+      recognizedCommand.textContent = 'Stop';
+      handPosition.textContent = 'Locked in safe position';
+      systemStatus.textContent = 'Emergency stop engaged';
+    });
+
+    setHandPosition('open');
+  </script>
+</body>
+</html>
