@@ -827,6 +827,10 @@
 
   <script>
     const controlOptions = document.querySelectorAll('.control-option');
+    const historyList = document.querySelector('.history-list');
+
+let voiceSocket = null;
+let reconnectTimer = null;
     const detectedSpeech = document.getElementById('detected-speech');
     const recognizedCommand = document.getElementById('recognized-command');
     const handPosition = document.getElementById('hand-position');
@@ -1048,23 +1052,268 @@
       recognizedCommand.textContent = 'Sequential Flexion';
       systemStatus.textContent = `Sequential flexion complete: ${validOrder.map((finger) => fingerLabelMap[finger]).join(' -> ')}.`;
     }
+function selectControlMode(modeName) {
+  controlOptions.forEach((option) => {
+    const isSelected =
+      option.dataset.mode === modeName;
 
+    option.classList.toggle(
+      'active',
+      isSelected
+    );
+
+    option.setAttribute(
+      'aria-pressed',
+      String(isSelected)
+    );
+  });
+}
+
+
+function addHistoryEntry(
+  title,
+  description
+) {
+  const item = document.createElement('li');
+  const heading = document.createElement('strong');
+
+  heading.textContent = title;
+
+  const time = new Date().toLocaleTimeString();
+
+  item.appendChild(heading);
+  item.appendChild(
+    document.createTextNode(
+      `${description} — ${time}`
+    )
+  );
+
+  historyList.prepend(item);
+
+  while (historyList.children.length > 10) {
+    historyList.removeChild(
+      historyList.lastElementChild
+    );
+  }
+}
+
+
+function handleVoiceCommand(message) {
+  const command = String(
+    message.command || ''
+  ).toLowerCase();
+
+  const spokenText =
+    message.recognizedText ||
+    command.toUpperCase();
+
+  selectControlMode('Voice Control');
+
+  detectedSpeech.textContent = spokenText;
+  recognizedCommand.textContent =
+    command.toUpperCase();
+
+  if (command === 'open') {
+    setHandPosition('open');
+
+    systemStatus.textContent =
+      'OPEN command received from Raspberry Pi.';
+
+    addHistoryEntry(
+      'Voice command: OPEN',
+      `Matched voice record ${message.record}`
+    );
+
+    return;
+  }
+
+  if (command === 'release') {
+    setHandPosition('release');
+
+    systemStatus.textContent =
+      'RELEASE command received from Raspberry Pi.';
+
+    addHistoryEntry(
+      'Voice command: RELEASE',
+      `Matched voice record ${message.record}`
+    );
+
+    return;
+  }
+
+  if (command === 'hook') {
+    setHandPosition('hook');
+
+    addHistoryEntry(
+      'Voice command: HOOK',
+      'Hook flexion activated'
+    );
+
+    return;
+  }
+
+  if (command === 'progressive') {
+    setHandPosition('progressive');
+
+    addHistoryEntry(
+      'Voice command: PROGRESSIVE',
+      'Progressive flexion activated'
+    );
+
+    return;
+  }
+
+  if (command === 'partial') {
+    setHandPosition('partial');
+
+    addHistoryEntry(
+      'Voice command: PARTIAL',
+      'Partial flexion activated'
+    );
+
+    return;
+  }
+
+  if (command === 'stop') {
+    detectedSpeech.textContent = spokenText;
+    recognizedCommand.textContent = 'STOP';
+    handPosition.textContent =
+      'Locked in safe position';
+    systemStatus.textContent =
+      'Emergency stop command received';
+
+    addHistoryEntry(
+      'Voice command: STOP',
+      'Emergency stop activated'
+    );
+
+    return;
+  }
+
+  systemStatus.textContent =
+    `Unknown voice command: ${command}`;
+}
+
+
+function connectToRaspberryPi() {
+  clearTimeout(reconnectTimer);
+
+  /*
+    Use rehabpi.local first.
+
+    If it does not connect, replace it with the
+    Raspberry Pi IP address, for example:
+
+    ws://192.168.137.120:8765
+  */
+  const websocketUrl = 'ws://192.168.1.20:8765';
+
+  systemStatus.textContent =
+    'Connecting to Raspberry Pi...';
+
+  voiceSocket = new WebSocket(
+    websocketUrl
+  );
+
+  voiceSocket.addEventListener(
+    'open',
+    () => {
+      systemStatus.textContent =
+        'Raspberry Pi voice connection active';
+
+      addHistoryEntry(
+        'Raspberry Pi connected',
+        'Voice WebSocket connection established'
+      );
+    }
+  );
+
+  voiceSocket.addEventListener(
+    'message',
+    (event) => {
+      try {
+        const message = JSON.parse(
+          event.data
+        );
+
+        console.log(
+          'Raspberry Pi message:',
+          message
+        );
+
+        if (
+          message.type ===
+          'voice-command'
+        ) {
+          handleVoiceCommand(message);
+        }
+
+        if (
+          message.type === 'connection'
+          && message.status === 'connected'
+        ) {
+          systemStatus.textContent =
+            'Raspberry Pi connected and ready';
+        }
+      } catch (error) {
+        console.error(
+          'Invalid Raspberry Pi message:',
+          error
+        );
+
+        systemStatus.textContent =
+          'Invalid data received from Raspberry Pi';
+      }
+    }
+  );
+
+  voiceSocket.addEventListener(
+    'close',
+    () => {
+      systemStatus.textContent =
+        'Raspberry Pi disconnected. Reconnecting...';
+
+      reconnectTimer = setTimeout(
+        connectToRaspberryPi,
+        3000
+      );
+    }
+  );
+
+  voiceSocket.addEventListener(
+    'error',
+    () => {
+      systemStatus.textContent =
+        'Raspberry Pi connection error';
+
+      voiceSocket.close();
+    }
+  );
+}
     controlOptions.forEach((option) => {
-      option.addEventListener('click', () => {
-        controlOptions.forEach((item) => {
-          item.classList.remove('active');
-          item.setAttribute('aria-pressed', 'false');
-        });
+  option.addEventListener('click', () => {
+    const selectedMode =
+      option.dataset.mode;
 
-        option.classList.add('active');
-        option.setAttribute('aria-pressed', 'true');
+    selectControlMode(selectedMode);
 
-        const selectedMode = option.getAttribute('data-mode');
-        recognizedCommand.textContent = selectedMode;
-        detectedSpeech.textContent = selectedMode === 'Voice Control' ? 'Voice mode selected' : 'EMG mode selected';
-        systemStatus.textContent = 'Monitoring active';
-      });
-    });
+    recognizedCommand.textContent =
+      selectedMode;
+
+    detectedSpeech.textContent =
+      selectedMode === 'Voice Control'
+        ? 'Voice mode selected'
+        : 'EMG mode selected';
+
+    systemStatus.textContent =
+      `${selectedMode} is active`;
+
+    addHistoryEntry(
+      'Control mode changed',
+      `${selectedMode} selected manually`
+    );
+  });
+});
 
     handButtons.forEach((button) => {
       button.addEventListener('click', () => {
@@ -1098,6 +1347,7 @@
     });
 
     setHandPosition('open');
+    connectToRaspberryPi();
   </script>
 </body>
 </html>
