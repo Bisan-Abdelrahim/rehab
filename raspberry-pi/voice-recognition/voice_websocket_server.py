@@ -1,9 +1,12 @@
 import asyncio
 import json
 import time
+from typing import Any
 
 import serial
 import websockets
+
+from emergency_controller import EmergencyController
 
 
 SERIAL_PORT = "/dev/serial0"
@@ -43,6 +46,25 @@ RECORD_COMMANDS = {
 }
 
 connected_clients = set()
+emergency_controller = EmergencyController(enable_pins=[])
+
+
+async def build_emergency_payload(status: str, message: str, *, event: dict[str, Any] | None = None) -> dict[str, Any]:
+    state = emergency_controller.get_state()
+    payload = {
+        "type": "emergency-state",
+        "status": status,
+        "message": message,
+        "state": state,
+    }
+    if event is not None:
+        payload["event"] = event
+    return payload
+
+
+async def broadcast_emergency_state(message: str, *, event: dict[str, Any] | None = None) -> None:
+    payload = await build_emergency_payload("accepted", message, event=event)
+    await send_to_all_clients(payload)
 
 
 def read_module_response(
@@ -129,9 +151,77 @@ async def websocket_handler(
         })
     )
 
+    await websocket.send(
+        json.dumps({
+            "type": "emergency-state",
+            "status": "accepted" if emergency_controller.is_emergency_active else "ready",
+            "message": (
+                "Emergency Stop Activated – Motors Disabled"
+                if emergency_controller.is_emergency_active else
+                "Emergency stop is inactive"
+            ),
+            "state": emergency_controller.get_state(),
+        })
+    )
+
     try:
         async for message in websocket:
             print("Website message:", message)
+            try:
+                payload = json.loads(message)
+            except json.JSONDecodeError:
+                print("Ignoring invalid JSON message:", message)
+                continue
+
+            message_type = payload.get("type")
+
+            if message_type == "emergency-stop":
+                event = emergency_controller.activate_emergency(
+                    payload.get("reason", "website-request")
+                )
+                response = {
+                    "type": "emergency-stop",
+                    "status": "accepted",
+                    "message": "Emergency Stop Activated – Motors Disabled",
+                    "event": event,
+                    "state": emergency_controller.get_state(),
+                }
+                await send_to_all_clients(response)
+                await websocket.send(json.dumps(response))
+                continue
+
+            if message_type == "emergency-reset":
+                event = emergency_controller.reset_emergency()
+                response = {
+                    "type": "emergency-reset",
+                    "status": "accepted",
+                    "message": "Emergency stop reset. Controls are enabled again.",
+                    "event": event,
+                    "state": emergency_controller.get_state(),
+                }
+                await send_to_all_clients(response)
+                await websocket.send(json.dumps(response))
+                continue
+
+            if message_type == "emergency-status":
+                state_payload = await build_emergency_payload(
+                    "ready",
+                    "Emergency stop state reported.",
+                )
+                await websocket.send(json.dumps(state_payload))
+                continue
+
+            if emergency_controller.is_emergency_active:
+                print("Rejecting command because emergency stop is active:", payload)
+                await websocket.send(json.dumps({
+                    "type": "emergency-stop",
+                    "status": "blocked",
+                    "message": "Emergency stop active. New motor commands are blocked until reset.",
+                    "state": emergency_controller.get_state(),
+                }))
+                continue
+
+            emergency_controller.accept_command(payload)
 
     except websockets.ConnectionClosed:
         pass
@@ -248,6 +338,13 @@ async def monitor_voice_module() -> None:
                         f"Recognized: {command.upper()} "
                         f"(record {record_number})"
                     )
+
+                    if emergency_controller.is_emergency_active:
+                        print(
+                            "Suppressing voice command while emergency stop is active:",
+                            command,
+                        )
+                        continue
 
                     await send_to_all_clients(
                         message

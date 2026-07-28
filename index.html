@@ -309,18 +309,27 @@
 
     .hand-controls {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
       width: 100%;
     }
 
     .hand-controls button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 56px;
+      width: 100%;
       border: 1px solid var(--line);
       background: #ffffff;
       border-radius: 999px;
       padding: 10px 12px;
       color: var(--text);
       font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
+      white-space: normal;
+      overflow-wrap: anywhere;
       cursor: pointer;
       transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
     }
@@ -368,17 +377,17 @@
     .finger-buttons,
     .sequential-buttons {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 8px;
-    }
-
-    .sequential-buttons {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .finger-buttons button,
     .sequential-buttons button,
     .reset-fingers {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
       border: 1px solid var(--line);
       border-radius: 10px;
       background: #fff;
@@ -386,6 +395,10 @@
       padding: 8px 10px;
       font-size: 0.84rem;
       font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
+      white-space: normal;
+      overflow-wrap: anywhere;
       cursor: pointer;
       transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     }
@@ -432,21 +445,96 @@
     .stop-button {
       width: 100%;
       margin-top: 18px;
-      padding: 15px 18px;
+      padding: 18px 20px;
       border: 0;
-      border-radius: 16px;
-      background: linear-gradient(180deg, #df5959 0%, var(--danger) 100%);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f36a6a 0%, var(--danger) 100%);
       color: white;
-      font-size: 1rem;
-      font-weight: 700;
+      font-size: 1.04rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
       cursor: pointer;
-      box-shadow: 0 14px 28px rgba(192, 58, 58, 0.18);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 16px 34px rgba(192, 58, 58, 0.22);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
     }
 
     .stop-button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 16px 34px rgba(192, 58, 58, 0.22);
+      box-shadow: 0 18px 38px rgba(192, 58, 58, 0.28);
+      filter: brightness(1.02);
+    }
+
+    .emergency-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      padding: 16px 18px;
+      border: 1px solid rgba(192, 58, 58, 0.22);
+      border-radius: 16px;
+      background: rgba(192, 58, 58, 0.10);
+      color: var(--danger);
+      font-weight: 700;
+      box-shadow: 0 12px 28px rgba(192, 58, 58, 0.10);
+    }
+
+    .emergency-banner.active {
+      display: flex;
+    }
+
+    .emergency-banner-content {
+      display: grid;
+      gap: 4px;
+      flex: 1 1 260px;
+    }
+
+    .emergency-banner strong {
+      font-size: 1rem;
+      display: block;
+    }
+
+    .emergency-banner span {
+      color: var(--text);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .emergency-banner-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex: 0 0 auto;
+    }
+
+    .emergency-button {
+      display: none;
+      padding: 12px 14px;
+      border: 1px solid rgba(23, 107, 135, 0.22);
+      border-radius: 14px;
+      background: white;
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .emergency-banner.active .emergency-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .emergency-button:disabled,
+    .control-option:disabled,
+    .hand-controls button:disabled,
+    .finger-buttons button:disabled,
+    .sequential-buttons button:disabled,
+    .reset-fingers:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     .history-list li {
@@ -509,11 +597,11 @@
       }
 
       .hand-controls {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       }
 
       .finger-buttons {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       }
     }
   </style>
@@ -530,6 +618,16 @@
         Ready for device connection
       </div>
     </header>
+
+    <div class="emergency-banner" id="emergency-banner" role="status" aria-live="polite">
+      <div class="emergency-banner-content">
+        <strong id="emergency-banner-title">Emergency Stop Activated – Motors Disabled</strong>
+        <span id="emergency-banner-text">All movement controls are locked until the emergency state is reset.</span>
+      </div>
+      <div class="emergency-banner-actions">
+        <button class="emergency-button" id="reset-emergency" type="button">Reset Emergency Stop</button>
+      </div>
+    </div>
 
     <section class="grid status-grid" aria-label="Connection status">
       <article class="card">
@@ -797,7 +895,7 @@
           </div>
         </div>
 
-        <button class="stop-button" id="emergency-stop" type="button">Emergency Stop</button>
+        <button class="stop-button" id="emergency-stop" type="button">EMERGENCY STOP</button>
       </aside>
     </section>
 
@@ -836,6 +934,10 @@ let reconnectTimer = null;
     const handPosition = document.getElementById('hand-position');
     const systemStatus = document.getElementById('system-status');
     const emergencyStop = document.getElementById('emergency-stop');
+    const resetEmergency = document.getElementById('reset-emergency');
+    const emergencyBanner = document.getElementById('emergency-banner');
+    const emergencyBannerTitle = document.getElementById('emergency-banner-title');
+    const emergencyBannerText = document.getElementById('emergency-banner-text');
     const handButtons = document.querySelectorAll('.hand-controls button');
     const fingerSelect = document.getElementById('finger-select');
     const fingerPositionButtons = document.querySelectorAll('[data-finger-position]');
@@ -875,6 +977,106 @@ let reconnectTimer = null;
       ring: 'Ring',
       little: 'Little'
     };
+
+    let emergencyState = {
+      active: false,
+      confirmed: false,
+      message: 'Emergency stop is inactive.'
+    };
+    let emergencyCommandPending = false;
+    let emergencyResetPending = false;
+    let emergencyWarningShown = false;
+    let emergencyAckTimer = null;
+
+    function getEmergencyActive() {
+      return emergencyState.active;
+    }
+
+    function setEmergencyState(active, message = 'All movement controls are locked until the emergency state is reset.') {
+      emergencyState = {
+        ...emergencyState,
+        active,
+        confirmed: active,
+        message
+      };
+      emergencyBanner.classList.toggle('active', active);
+      emergencyStop.disabled = active;
+      resetEmergency.disabled = !active;
+      resetEmergency.style.display = active ? 'inline-flex' : 'none';
+      emergencyBannerTitle.textContent = active
+        ? 'Emergency Stop Activated – Motors Disabled'
+        : 'Emergency Stop Reset';
+      emergencyBannerText.textContent = active
+        ? message
+        : 'Controls are re-enabled after reset. Motors will remain stopped until you confirm it is safe.';
+
+      document.querySelectorAll('.control-option, .hand-controls button, .finger-buttons button, .sequential-buttons button, .reset-fingers, #finger-select').forEach((element) => {
+        element.disabled = active;
+        element.classList.toggle('is-disabled-by-emergency', active);
+      });
+
+      if (!active) {
+        emergencyCommandPending = false;
+        emergencyResetPending = false;
+        emergencyWarningShown = false;
+      }
+
+      if (emergencyAckTimer) {
+        clearTimeout(emergencyAckTimer);
+        emergencyAckTimer = null;
+      }
+    }
+
+    function applyEmergencyStateFromMessage(message) {
+      const state = message.state || {};
+      const active = Boolean(state.emergencyActive);
+      const messageText = active
+        ? (message.message || 'Emergency stop active from the controller.')
+        : (message.message || 'Emergency stop reset. Controls are enabled again.');
+      setEmergencyState(active, messageText);
+      emergencyState.confirmed = true;
+      emergencyResetPending = false;
+      emergencyCommandPending = false;
+      if (emergencyAckTimer) {
+        clearTimeout(emergencyAckTimer);
+        emergencyAckTimer = null;
+      }
+      return active;
+    }
+
+    function showEmergencyWarning(message) {
+      emergencyWarningShown = true;
+      systemStatus.textContent = message;
+      addHistoryEntry('Emergency warning', message);
+    }
+
+    function sendEmergencyCommand() {
+      if (!voiceSocket || voiceSocket.readyState !== WebSocket.OPEN) {
+        showEmergencyWarning('Website could not confirm the controller received the emergency-stop command. Please verify the Raspberry Pi connection and retry.');
+        return false;
+      }
+
+      emergencyCommandPending = true;
+      emergencyWarningShown = false;
+      voiceSocket.send(JSON.stringify({
+        type: 'emergency-stop',
+        source: 'website',
+        timestamp: new Date().toISOString(),
+        reason: 'user-request'
+      }));
+
+      if (emergencyAckTimer) {
+        clearTimeout(emergencyAckTimer);
+      }
+
+      emergencyAckTimer = window.setTimeout(() => {
+        if (emergencyCommandPending && !getEmergencyActive()) {
+          showEmergencyWarning('The website did not receive a confirmation from the controller. Please verify the Raspberry Pi connection and retry.');
+        }
+      }, 2000);
+
+      return true;
+    }
 
     const handCalibration = {
       open: {
@@ -1099,6 +1301,14 @@ function addHistoryEntry(
 
 
 function handleVoiceCommand(message) {
+  if (getEmergencyActive()) {
+    detectedSpeech.textContent = 'Emergency stop active';
+    recognizedCommand.textContent = 'STOP';
+    handPosition.textContent = 'Locked in safe position';
+    systemStatus.textContent = 'Emergency stop active; new commands are blocked.';
+    return;
+  }
+
   const command = String(
     message.command || ''
   ).toLowerCase();
@@ -1206,7 +1416,7 @@ function connectToRaspberryPi() {
 
     ws://192.168.137.120:8765
   */
-  const websocketUrl = 'ws://192.168.1.20:8765';
+  const websocketUrl = 'ws://192.168.137.17:8765';
 
   systemStatus.textContent =
     'Connecting to Raspberry Pi...';
@@ -1246,6 +1456,40 @@ function connectToRaspberryPi() {
           'voice-command'
         ) {
           handleVoiceCommand(message);
+        }
+
+        if (message.type === 'emergency-stop' && message.status === 'accepted') {
+          if (emergencyAckTimer) {
+            clearTimeout(emergencyAckTimer);
+            emergencyAckTimer = null;
+          }
+          emergencyCommandPending = false;
+          applyEmergencyStateFromMessage(message);
+          detectedSpeech.textContent = 'Emergency stop accepted';
+          recognizedCommand.textContent = 'STOP';
+          handPosition.textContent = 'Locked in safe position';
+          systemStatus.textContent = message.message || 'Emergency stop accepted by the controller.';
+          addHistoryEntry('Emergency stop', message.message || 'Emergency stop accepted by the controller.');
+        }
+
+        if (message.type === 'emergency-reset' && message.status === 'accepted') {
+          if (emergencyAckTimer) {
+            clearTimeout(emergencyAckTimer);
+            emergencyAckTimer = null;
+          }
+          applyEmergencyStateFromMessage(message);
+          detectedSpeech.textContent = 'Emergency reset';
+          recognizedCommand.textContent = 'RESET';
+          handPosition.textContent = 'Ready';
+          systemStatus.textContent = message.message || 'Emergency stop reset. Controls are enabled again.';
+          addHistoryEntry('Emergency reset', message.message || 'Emergency stop reset by the controller.');
+        }
+
+        if (message.type === 'emergency-state') {
+          const active = applyEmergencyStateFromMessage(message);
+          systemStatus.textContent = active
+            ? (message.message || 'Emergency stop active from controller state.')
+            : (message.message || 'Emergency stop cleared from controller state.');
         }
 
         if (
@@ -1292,6 +1536,11 @@ function connectToRaspberryPi() {
 }
     controlOptions.forEach((option) => {
   option.addEventListener('click', () => {
+    if (getEmergencyActive()) {
+      systemStatus.textContent = 'Emergency stop active; control selection is disabled.';
+      return;
+    }
+
     const selectedMode =
       option.dataset.mode;
 
@@ -1317,35 +1566,112 @@ function connectToRaspberryPi() {
 
     handButtons.forEach((button) => {
       button.addEventListener('click', () => {
+        if (getEmergencyActive()) {
+          systemStatus.textContent = 'Emergency stop active; movement is disabled.';
+          return;
+        }
         setHandPosition(button.dataset.position);
       });
     });
 
     fingerPositionButtons.forEach((button) => {
       button.addEventListener('click', () => {
+        if (getEmergencyActive()) {
+          systemStatus.textContent = 'Emergency stop active; movement is disabled.';
+          return;
+        }
         setFingerPosition(fingerSelect.value, button.dataset.fingerPosition);
       });
     });
 
     resetFingersButton.addEventListener('click', () => {
+      if (getEmergencyActive()) {
+        systemStatus.textContent = 'Emergency stop active; reset is disabled.';
+        return;
+      }
       resetAllFingers();
     });
 
     seqIndexToLittleButton.addEventListener('click', async () => {
+      if (getEmergencyActive()) {
+        systemStatus.textContent = 'Emergency stop active; sequential motion is disabled.';
+        return;
+      }
       await runSequentialFlexion(['index', 'middle', 'ring', 'little']);
     });
 
     seqLittleToIndexButton.addEventListener('click', async () => {
+      if (getEmergencyActive()) {
+        systemStatus.textContent = 'Emergency stop active; sequential motion is disabled.';
+        return;
+      }
       await runSequentialFlexion(['little', 'ring', 'middle', 'index']);
     });
 
     emergencyStop.addEventListener('click', () => {
+      if (getEmergencyActive()) {
+        systemStatus.textContent = 'Emergency stop already active.';
+        return;
+      }
+
+      const confirmed = window.confirm('Are you sure you want to stop all motors immediately?');
+      if (!confirmed) {
+        return;
+      }
+
       detectedSpeech.textContent = 'Emergency stop requested';
-      recognizedCommand.textContent = 'Stop';
+      recognizedCommand.textContent = 'STOP';
       handPosition.textContent = 'Locked in safe position';
-      systemStatus.textContent = 'Emergency stop engaged';
+      systemStatus.textContent = 'Sending emergency-stop command to controller...';
+
+      const sent = sendEmergencyCommand();
+      if (!sent) {
+        setEmergencyState(true, 'The website could not confirm that the controller received the emergency-stop command.');
+      }
     });
 
+    resetEmergency.addEventListener('click', () => {
+      if (!getEmergencyActive()) {
+        systemStatus.textContent = 'No emergency stop is active.';
+        return;
+      }
+
+      const confirmed = window.confirm('Reset the emergency stop? This will re-enable controls only after the controller confirms the reset. Motors remain stopped until you confirm it is safe.');
+      if (!confirmed) {
+        return;
+      }
+
+      emergencyResetPending = true;
+      detectedSpeech.textContent = 'Emergency stop reset requested';
+      recognizedCommand.textContent = 'RESET';
+      handPosition.textContent = 'Reset pending';
+      systemStatus.textContent = 'Sending emergency reset command to controller...';
+
+      if (!voiceSocket || voiceSocket.readyState !== WebSocket.OPEN) {
+        emergencyResetPending = false;
+        showEmergencyWarning('Website could not confirm the controller received the emergency reset command. Please verify the Raspberry Pi connection and retry.');
+        return;
+      }
+
+      voiceSocket.send(JSON.stringify({
+        type: 'emergency-reset',
+        source: 'website',
+        timestamp: new Date().toISOString(),
+        reason: 'user-reset'
+      }));
+
+      if (emergencyAckTimer) {
+        clearTimeout(emergencyAckTimer);
+      }
+
+      emergencyAckTimer = window.setTimeout(() => {
+        if (emergencyResetPending && getEmergencyActive()) {
+          showEmergencyWarning('The controller did not confirm the reset. The emergency stop remains active until the backend responds.');
+        }
+      }, 2500);
+    });
+
+    setEmergencyState(false);
     setHandPosition('open');
     connectToRaspberryPi();
   </script>
